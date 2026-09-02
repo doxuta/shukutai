@@ -1,0 +1,17 @@
+table.tsv is derived data and is NOT covered by the MIT licence in LICENSE.
+
+It is generated (by internal/gen) from two datasets published by the
+Character Information Technology Promotion Council (文字情報技術促進協議会),
+originally produced by the Information-technology Promotion Agency, Japan
+(独立行政法人情報処理推進機構, IPA), both under
+Creative Commons Attribution-ShareAlike 2.1 Japan
+(https://creativecommons.org/licenses/by-sa/2.1/jp/):
+
+  MJ縮退マップ (MJ Shrink Map) Ver.1.2.0, issued 2018-01-26
+    https://moji.or.jp/mojikiban/map/
+  MJ文字情報一覧表 (MJ Character Information List) Ver.006.02, January 2024
+    https://moji.or.jp/mojikiban/mjlist/
+
+table.tsv is therefore also CC BY-SA 2.1 JP. Attribute IPA when you
+redistribute it. The Unicode-derived lines (basis bit 32) come from the
+Unicode Character Database, which carries the Unicode licence.
