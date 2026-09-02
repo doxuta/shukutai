@@ -4,9 +4,10 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/doxuta/shukutai.svg)](https://pkg.go.dev/github.com/doxuta/shukutai)
 
 Fold Japanese kanji variants (異体字) to one canonical form, so that
-`髙橋` and `高橋`, `渡邉` and `渡辺`, `山﨑` and `山崎` compare equal. Pure Go,
-no dependencies, one 368 KB table built from IPA's **MJ縮退マップ**
-(MJ Shrink Map) rather than a hand-written list.
+`髙橋` and `高橋`, `渡邉` and `渡辺`, `山﨑` and `山崎` compare equal. Pure Go;
+the library imports only the standard library (`golang.org/x/text` appears in
+`go.mod` for the table generator and the tests). One 368 KB table built from
+IPA's **MJ縮退マップ** (MJ Shrink Map) rather than a hand-written list.
 
 縮退 (*shukutai*) is the map's own word for the operation: reducing a glyph
 to the nearest character that JIS X 0213 can represent.
