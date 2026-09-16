@@ -5,6 +5,14 @@
 // evidence category (Basis) the map records for each link. Fold follows those
 // links to a fixed point and refuses to guess when the evidence points two
 // ways.
+//
+// One exception, because the map is not a DAG: six glyph families link both
+// ways, and refusing there would leave their members unfoldable. Inside a
+// cycle Fold elects a representative instead — by the strongest evidence in
+// the cycle where that decides it, and otherwise by the lowest code point.
+// That second rule is arbitrary and it decides five of the six, so for those
+// members canonical means only deterministic. The README's Limitations
+// section names every affected glyph.
 package shukutai
 
 import (
