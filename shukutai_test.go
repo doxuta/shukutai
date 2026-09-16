@@ -248,11 +248,7 @@ func TestSyntheticCycleElectsStrongestEvidence(t *testing.T) {
 	}
 }
 
-func clearRepCache() {
-	repMu.Lock()
-	defer repMu.Unlock()
-	repCache = map[Basis]map[rune]rune{}
-}
+func clearRepCache() { repCache.Clear() }
 
 // The shipped TSV must be well-formed: three hex/decimal fields, sorted,
 // no self-pairs, no duplicate (from,to).

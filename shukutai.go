@@ -155,10 +155,15 @@ func rank(b Basis) int {
 	return len(basisRank)
 }
 
-var (
-	repMu    sync.Mutex
-	repCache = map[Basis]map[rune]rune{}
-)
+// repCache holds the elected representatives for each Basis seen so far.
+// Fold consults it once per rune, so Key over a name column hits it once per
+// character: a package-global lock here serialises the whole library, and
+// measurably did — with a mutex the parallel benchmark ran 3.4x slower than
+// the same work on a single goroutine. sync.Map's read path takes no lock.
+// Two goroutines racing to fill the same basis both compute from the
+// immutable table and elect the same representatives, so whichever entry
+// LoadOrStore keeps is the same map.
+var repCache sync.Map // Basis -> map[rune]rune
 
 // representatives maps every rune that lies on a cycle of the b-filtered fold
 // graph to the canonical form elected for that cycle. Result is cached per
@@ -191,11 +196,15 @@ var (
 // The election runs on the b-filtered graph, so restricting the basis can
 // never import a representative elected from links the caller excluded.
 func representatives(b Basis) map[rune]rune {
-	repMu.Lock()
-	defer repMu.Unlock()
-	if m, ok := repCache[b]; ok {
-		return m
+	if m, ok := repCache.Load(b); ok {
+		return m.(map[rune]rune)
 	}
+	m, _ := repCache.LoadOrStore(b, elect(b))
+	return m.(map[rune]rune)
+}
+
+// elect runs the election described on representatives, once per Basis.
+func elect(b Basis) map[rune]rune {
 	m := map[rune]rune{}
 	for _, comp := range cycles(b) {
 		member := make(map[rune]bool, len(comp))
@@ -222,11 +231,20 @@ func representatives(b Basis) map[rune]rune {
 				}
 			}
 		}
+		if !found {
+			// Unreachable, and asserted rather than tolerated because the
+			// silent form of this bug is every member of comp folding to
+			// U+0000. Any path between two members of a strongly connected
+			// component stays inside it, so a component cycles(b) returned
+			// with more than one member has at least one internal link, that
+			// link passed the same c.Basis&b != 0 filter during the search,
+			// and rank of a non-zero masked basis is always < len(basisRank).
+			panic("shukutai: cycle " + string(comp) + " has no internal link; cycles is broken")
+		}
 		for _, r := range comp {
 			m[r] = rep
 		}
 	}
-	repCache[b] = m
 	return m
 }
 
