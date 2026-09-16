@@ -118,25 +118,39 @@ go run ./internal/gen -shrink MJShrinkMap.1.2.0.json -mji mji.00602.xlsx -o tabl
 | self-links dropped (glyph already representable) | 10,235 |
 | **pairs in `table.tsv`** | **28,515** |
 | distinct source code points | 22,601 |
-| fold to a unique fixed point under `Default` | 19,497 (86.3%) |
-| left unresolved (branches disagree) | 3,104 (13.7%) |
+| fold to a unique fixed point under `Default` | 19,523 (86.4%) |
+| left unresolved (branches disagree) | 3,078 (13.6%) |
 | longest chain | 4 hops |
-| distinct fixed points reached | 6,857 |
+| cycles (strongly connected components / glyphs) | 6 / 13 |
+| distinct fixed points reached | 6,863 |
 | extra pairs from Unicode (compatibility ideograph → canonical) | 1,002 |
 
 Each line of `table.tsv` is `from<TAB>to<TAB>basis`, hex code points and a
 decimal bit set. `grep '^9AD9' table.tsv` tells you what the map says about
-`髙`. Every number above is pinned by `TestReadmeClaims`; a data update is
-supposed to break that test.
+`髙`. Every number above is pinned by a test — `TestReadmeClaims` for all of
+them bar the cycle row, which `TestCyclesResolveDeterministically` pins; a
+data update is supposed to break them.
 
 ## Limitations
 
 - **No ranking.** 告示582号 carries an explicit 第1順位/第2順位 and the
   family-register notices carry a hop count; both could break ties. This
-  package does not use them, so 3,104 source characters stay unresolved
-  (`㐄` → 井 or 牛): 2,129 in the BMP and 975 outside it. Using the rank is
+  package does not use them, so 3,078 source characters stay unresolved
+  (`㐄` → 井 or 牛): 2,107 in the BMP and 971 outside it. Using the rank is
   the obvious upgrade; IPA's own guidance is that context should decide,
-  which is why it is not done blindly here.
+  which is why it is not done blindly here. The same missing rank is what
+  forces the arbitrary half of the cycle tie-break below.
+- **The map is not a DAG, and one cycle is broken arbitrarily.** The links go
+  both ways for six glyph families (13 glyphs, 7 elementary cycles), so the
+  fold has to elect a canonical form. It takes the glyph the strongest
+  evidence inside the cycle points at — that settles 靎/靏/鶴 on `鶴`, because
+  the links to `鶴` are family-register notices and the links back are
+  dictionary-tier — and breaks a remaining tie on the lowest code point. The
+  other five are symmetric family-register pairs (`址`↔`阯`, `雕`↔`鵰`,
+  `輀`↔`轜`, `羐`↔`羑`, `㿉`↔`㿗`) where that second rule decides and the
+  evidence does not. Nothing outside a cycle is affected, and no link out of
+  a cycle member is followed, so `鶴` → `靍` U+974D is dropped and `靍` stays
+  its own key. `TestCyclesResolveDeterministically` pins the whole set.
 - **Variation sequences are stripped, not distinguished.** `葛` + U+E0100
   and `葛` + U+E0101 are different MJ glyphs with possibly different links;
   this package treats both as plain `葛`. The 5,456 glyphs that exist only
@@ -150,7 +164,7 @@ supposed to break that test.
   point table is from 2024 (Ver.006.02). Glyphs added between those versions
   have no links.
 - **Default excludes `Analogy`.** Measured, it changes nothing: the number of
-  unresolved characters is 3,104 under `Default` and under `All`. It is kept
+  unresolved characters is 3,078 under `Default` and under `All`. It is kept
   as an explicit opt-in because the map itself files it as the weakest tier.
 
 ## Prior art

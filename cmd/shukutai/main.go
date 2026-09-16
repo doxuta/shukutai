@@ -68,18 +68,36 @@ func main() {
 
 func why(r rune, b shukutai.Basis) {
 	final, ok := shukutai.Fold(r, b)
+	cs := shukutai.Candidates(r)
+	// A rune that folds to itself while still carrying links the chosen basis
+	// allows can only be the glyph elected to represent a cycle: Fold stops
+	// there rather than follow them.
+	elected := false
+	if ok && final == r {
+		for _, c := range cs {
+			if c.Basis&b != 0 {
+				elected = true
+				break
+			}
+		}
+	}
 	switch {
 	case !ok:
-		fmt.Printf("%c U+%04X: unresolved (branches disagree or cycle)\n", r, r)
+		fmt.Printf("%c U+%04X: unresolved (branches disagree)\n", r, r)
+	case elected:
+		fmt.Printf("%c U+%04X: fixed point (elected to represent a cycle)\n", r, r)
 	case final == r:
 		fmt.Printf("%c U+%04X: fixed point\n", r, r)
 	default:
 		fmt.Printf("%c U+%04X → %c U+%04X\n", r, r, final, final)
 	}
-	for _, c := range shukutai.Candidates(r) {
+	for _, c := range cs {
 		mark := " "
-		if c.Basis&b == 0 {
+		switch {
+		case c.Basis&b == 0:
 			mark = "-" // present in the data but excluded by the chosen basis
+		case elected:
+			mark = "x" // not followed: the cycle's representative is the answer
 		}
 		fmt.Printf("  %s %c U+%04X  [%s]\n", mark, c.To, c.To, c.Basis)
 	}
